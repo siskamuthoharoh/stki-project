@@ -15,9 +15,16 @@ DATA_PATH = (
     PROJECT_ROOT / "data" / "processed" / "produk_kecantikan_bersih.csv"
 )
 
+ASPECTS = ("price", "packaging", "product", "aroma")
+SENTIMENTS = {
+    "negative": -1,
+    "neutral": 0,
+    "positive": 1,
+}
+
 
 class SkinFindSearch:
-    """Search skincare reviews using TF-IDF and cosine similarity."""
+    """Search skincare reviews using TF-IDF and optional filters."""
 
     def __init__(self, data_path: Path | str = DATA_PATH) -> None:
         self.data_path = Path(data_path)
@@ -37,7 +44,9 @@ class SkinFindSearch:
                 f"Kolom wajib tidak ditemukan: {sorted(missing_columns)}"
             )
 
-        self.df["cleaned_text"] = self.df["cleaned_text"].fillna("").astype(str)
+        self.df["cleaned_text"] = (
+            self.df["cleaned_text"].fillna("").astype(str)
+        )
 
         self.vectorizer = TfidfVectorizer(
             ngram_range=(1, 2),
@@ -50,13 +59,37 @@ class SkinFindSearch:
             self.df["cleaned_text"]
         )
 
-    def search(self, query: str, top_k: int = 10) -> pd.DataFrame:
-        """Return the most relevant reviews for a search query."""
+    def search(
+        self,
+        query: str,
+        top_k: int = 10,
+        aspect: str | None = None,
+        sentiment: str | None = None,
+    ) -> pd.DataFrame:
+        """Search reviews and optionally filter by aspect and sentiment."""
         if not isinstance(query, str) or not query.strip():
             raise ValueError("Kata kunci pencarian tidak boleh kosong.")
 
         if top_k < 1:
             raise ValueError("top_k harus minimal 1.")
+
+        if aspect is not None and aspect not in ASPECTS:
+            raise ValueError(
+                f"Aspek tidak valid. Pilih salah satu: {ASPECTS}"
+            )
+
+        if sentiment is not None:
+            sentiment = sentiment.lower()
+
+            if sentiment not in SENTIMENTS:
+                raise ValueError(
+                    "Sentimen tidak valid. Pilih negative, neutral, atau positive."
+                )
+
+            if aspect is None:
+                raise ValueError(
+                    "Pilih aspek terlebih dahulu jika menggunakan filter sentimen."
+                )
 
         cleaned_query = preprocess_text(query)
 
@@ -68,6 +101,14 @@ class SkinFindSearch:
 
         results = self.df.copy()
         results["similarity_score"] = scores
+
+        # Apply filters before selecting the top results.
+        if aspect is not None:
+            results = results[results[aspect].notna()]
+
+            if sentiment is not None:
+                expected_label = SENTIMENTS[sentiment]
+                results = results[results[aspect] == expected_label]
 
         results = results[results["similarity_score"] > 0].copy()
         results = results.sort_values(
@@ -82,16 +123,13 @@ class SkinFindSearch:
             "similarity_score",
         ]
 
-        if "product" in results.columns:
-            columns.append("product")
+        if aspect is not None:
+            columns.append(aspect)
+        else:
+            columns.extend(
+                column for column in ASPECTS if column in results.columns
+            )
 
-        if "price" in results.columns:
-            columns.append("price")
-
-        if "packaging" in results.columns:
-            columns.append("packaging")
-
-        if "aroma" in results.columns:
-            columns.append("aroma")
-
-        return results[columns].head(top_k).reset_index(drop=True)
+        return results[list(dict.fromkeys(columns))].head(top_k).reset_index(
+            drop=True
+        )

@@ -53,5 +53,58 @@ class TestSkinFindSearch(unittest.TestCase):
         self.assertTrue(results.empty)
 
 
+    def test_positive_product_filter(self):
+        results = self.search_engine.search(
+            "serum kulit kering",
+            top_k=5,
+            aspect="product",
+            sentiment="positive",
+        )
+
+        self.assertFalse(results.empty)
+        self.assertTrue((results["product"] == 1).all())
+
+    def test_negative_price_filter(self):
+        results = self.search_engine.search(
+            "harga produk skincare",
+            top_k=5,
+            aspect="price",
+            sentiment="negative",
+        )
+
+        self.assertFalse(results.empty)
+        self.assertTrue((results["price"] == -1).all())
+
+    def test_aspect_filter_without_sentiment(self):
+        results = self.search_engine.search(
+            "serum kulit kering",
+            top_k=5,
+            aspect="aroma",
+        )
+
+        self.assertIn("aroma", results.columns)
+
+    def test_invalid_aspect_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.search_engine.search(
+                "serum",
+                aspect="tekstur",
+            )
+
+    def test_sentiment_requires_aspect(self):
+        with self.assertRaises(ValueError):
+            self.search_engine.search(
+                "serum",
+                sentiment="positive",
+            )
+
+    def test_invalid_sentiment_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.search_engine.search(
+                "serum",
+                aspect="product",
+                sentiment="good",
+            )
+
 if __name__ == "__main__":
     unittest.main()
