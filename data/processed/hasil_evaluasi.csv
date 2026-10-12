@@ -1,0 +1,11 @@
+﻿query,jumlah_kandidat,jumlah_relevan,precision_at_5,precision_at_10,average_precision,MAP_seluruh_kueri
+aroma produk wanginya,10,10,1.0,1.0,1.0,0.7798032407407407
+harga produk skincare,10,8,0.6,0.8,0.6427579365079364,0.7798032407407407
+kemasan produk mudah digunakan,10,6,0.4,0.6,0.5925925925925927,0.7798032407407407
+pelembap untuk kulit kering,10,7,0.8,0.7,0.8333333333333333,0.7798032407407407
+produk dengan harga terjangkau,10,10,1.0,1.0,1.0,0.7798032407407407
+produk membuat kulit cerah,10,8,0.8,0.8,0.8956845238095237,0.7798032407407407
+produk untuk kulit berjerawat,10,10,1.0,1.0,1.0,0.7798032407407407
+serum kulit kering,10,4,0.2,0.4,0.37797619047619047,0.7798032407407407
+sunscreen ringan tidak lengket,10,6,0.4,0.6,0.4556878306878307,0.7798032407407407
+tekstur produk cepat meresap,10,10,1.0,1.0,1.0,0.7798032407407407
