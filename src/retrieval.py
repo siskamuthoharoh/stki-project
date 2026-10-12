@@ -97,7 +97,25 @@ class SkinFindSearch:
             raise ValueError("Kata kunci tidak memiliki teks yang dapat dicari.")
 
         query_vector = self.vectorizer.transform([cleaned_query])
-        scores = cosine_similarity(query_vector, self.tfidf_matrix).ravel()
+        scores = cosine_similarity(
+            query_vector, self.tfidf_matrix
+        ).ravel()
+
+        query_terms = set(cleaned_query.split())
+        review_texts = (
+            self.df["cleaned_text"].fillna("").astype(str)
+        )
+
+        term_match_scores = review_texts.apply(
+            lambda text: (
+                sum(term in set(text.split()) for term in query_terms)
+                / len(query_terms)
+                if query_terms
+                else 0.0
+            )
+        ).to_numpy()
+
+        scores = scores + (0.10 * term_match_scores)
 
         results = self.df.copy()
         results["similarity_score"] = scores
