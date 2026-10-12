@@ -25,3 +25,6 @@ desktop.ini
 *.tmp
 
 # Large local datasets (add specific patterns only when needed)
+
+# Generated notebook exports
+reports/*.html
